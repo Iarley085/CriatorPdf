@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de PDF Simples</title>
+    <!-- Incluindo Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluindo a biblioteca jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">Gerador de PDF</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Escreva ou cole seu texto abaixo e clique no botão para criar um arquivo PDF.</p>
+        </div>
+
+        <!-- Área de texto para o conteúdo do PDF -->
+        <div class="mb-6">
+            <label for="textContent" class="block text-lg font-medium mb-2">Conteúdo do PDF:</label>
+            <textarea id="textContent" rows="15" class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder="Comece a escrever aqui..."></textarea>
+        </div>
+        
+        <!-- Campo para o nome do arquivo -->
+        <div class="mb-6">
+             <label for="fileName" class="block text-lg font-medium mb-2">Nome do Arquivo:</label>
+             <input type="text" id="fileName" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150" value="documento" placeholder="Ex: meu_relatorio">
+        </div>
+
+        <!-- Botão para gerar o PDF -->
+        <div class="text-center">
+            <button id="generatePdfBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 ease-in-out">
+                Gerar PDF
+            </button>
+        </div>
+        
+        <!-- Mensagem de feedback -->
+        <div id="feedbackMessage" class="mt-6 text-center text-green-600 dark:text-green-400 font-medium opacity-0 transition-opacity duration-300"></div>
+    </div>
+
+    <script>
+        // Carrega a biblioteca jsPDF globalmente
+        const { jsPDF } = window.jspdf;
+
+        // Seleciona os elementos do DOM
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const textContent = document.getElementById('textContent');
+        const fileNameInput = document.getElementById('fileName');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+
+        // Adiciona um ouvinte de evento ao botão
+        generatePdfBtn.addEventListener('click', () => {
+            const text = textContent.value;
+            const fileName = fileNameInput.value.trim() || 'documento';
+
+            if (!text.trim()) {
+                showFeedback("Por favor, escreva algum conteúdo antes de gerar o PDF.", "error");
+                return;
+            }
+
+            try {
+                // Cria uma nova instância do jsPDF
+                // 'p' para retrato (portrait), 'mm' para milímetros, 'a4' para o tamanho da página
+                const doc = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Define as margens
+                const margin = 20;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const usableWidth = pageWidth - margin * 2;
+                
+                // Define a fonte e o tamanho
+                doc.setFont('Helvetica', 'normal');
+                doc.setFontSize(12);
+
+                // Adiciona o texto ao PDF, com quebra de linha automática
+                const lines = doc.splitTextToSize(text, usableWidth);
+                doc.text(lines, margin, margin);
+
+                // Salva o PDF com o nome de arquivo fornecido
+                doc.save(`${fileName}.pdf`);
+                
+                showFeedback("PDF gerado com sucesso!", "success");
+
+            } catch (error) {
+                console.error("Erro ao gerar PDF:", error);
+                showFeedback("Ocorreu um erro ao gerar o PDF. Tente novamente.", "error");
+            }
+        });
+        
+        // Função para mostrar feedback ao usuário
+        function showFeedback(message, type = "success") {
+            feedbackMessage.textContent = message;
+            feedbackMessage.classList.remove('opacity-0', 'text-green-600', 'text-red-600');
+            
+            if(type === 'error'){
+                 feedbackMessage.classList.add('text-red-600', 'dark:text-red-400');
+            } else {
+                 feedbackMessage.classList.add('text-green-600', 'dark:text-green-400');
+            }
+            
+            feedbackMessage.classList.add('opacity-100');
+
+            setTimeout(() => {
+                feedbackMessage.classList.add('opacity-0');
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>
